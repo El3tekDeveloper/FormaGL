@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <string>
+#include <filesystem>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -36,9 +37,10 @@ const char* title = "Graphic engine";
 int WIDTH = 1280;
 int HEIGHT = 720;
 
-const std::string texturesPath = "C:/Users/youel/Desktop/Projects/C++/FormaGL/assets/textures/";
-const std::string shadersPath = "C:/Users/youel/Desktop/Projects/C++/FormaGL/shaders/";
-const std::string modelsPath = "C:/Users/youel/Desktop/Projects/C++/FromaGL/assets/models/";
+std::string basePath = std::filesystem::current_path().string();
+const std::string texturesPath = basePath + "/assets/textures/";
+const std::string shadersPath  = basePath + "/shaders/";
+const std::string modelsPath   = basePath + "/assets/models/";
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {

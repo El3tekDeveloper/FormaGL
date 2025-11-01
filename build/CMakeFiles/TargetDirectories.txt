@@ -1,3 +1,0 @@
-C:/Users/youel/Desktop/Projects/C++/FormaGL/build/CMakeFiles/App.dir
-C:/Users/youel/Desktop/Projects/C++/FormaGL/build/CMakeFiles/edit_cache.dir
-C:/Users/youel/Desktop/Projects/C++/FormaGL/build/CMakeFiles/rebuild_cache.dir
