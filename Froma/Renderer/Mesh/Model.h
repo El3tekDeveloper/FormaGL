@@ -1,23 +1,21 @@
 #ifndef MODEL_CLASS_H
 #define MODEL_CLASS_H
 
-#include<json/json.h>
-#include"Mesh.h"
+#include <json/json.h>
+#include "Mesh.h"
 
 using json = nlohmann::json;
-
 
 class Model
 {
 public:
+
 	Model(const char* file);
 
-	void Draw(Shader& shader, Camera& camera);
-
-    glm::vec3 translation = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-    glm::vec3 eulerRotation = glm::vec3(0.0f);
-    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	void Draw(Shader& shader, Camera& camera, 
+		glm::vec3 translation = glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f),
+		glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f));
 
 private:
 	const char* file;
@@ -35,21 +33,25 @@ private:
 
 	void loadMesh(unsigned int indMesh);
 	void traverseNode(unsigned int nextNode, glm::mat4 matrix = glm::mat4(1.0f));
-
+	
 	std::vector<unsigned char> getData();
+	std::vector<unsigned char> decodeBase64(const std::string& encoded);
+	
 	std::vector<float> getFloats(json accessor);
 	std::vector<GLuint> getIndices(json accessor);
-	std::vector<Texture> getTextures();
+	std::vector<Texture> getTextures(unsigned int matIdx);
+	void loadTextureFromIndex(unsigned int texIdx, const char* type, const std::string& directory, std::vector<Texture>& textures);
 
-	std::vector<Vertex> assembleVertices
-	(
-		std::vector<glm::vec3> positions, 
-		std::vector<glm::vec3> normals, 
-		std::vector<glm::vec2> texUVs
+	std::vector<Vertex> assembleVertices(
+		std::vector<glm::vec3> positions,
+		std::vector<glm::vec3> normals,
+		std::vector<glm::vec2> texUVs,
+		std::vector<glm::vec3> colors
 	);
 
 	std::vector<glm::vec2> groupFloatsVec2(std::vector<float> floatVec);
 	std::vector<glm::vec3> groupFloatsVec3(std::vector<float> floatVec);
 	std::vector<glm::vec4> groupFloatsVec4(std::vector<float> floatVec);
 };
+
 #endif

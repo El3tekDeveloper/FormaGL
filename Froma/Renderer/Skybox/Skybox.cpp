@@ -1,15 +1,38 @@
 #include "Skybox.h"
 
-Skybox::Skybox(const char* exrPath)
+Skybox::Skybox(const char* hdrPath)
 {
     cube = new Cube(1.0f, glm::vec3(0.0f), glm::vec3(1.0f));
-    textureID = loadEXRTexture(exrPath);
+    textureID = loadHDRTexture(hdrPath);
 }
 
 Skybox::~Skybox()
 {
     delete cube;
     glDeleteTextures(1, &textureID);
+}
+
+GLuint Skybox::loadHDRTexture(const char* path)
+{
+    std::string pathStr(path);
+    std::string extension = pathStr.substr(pathStr.find_last_of(".") + 1);
+    
+    // Convert extension to lowercase for comparison
+    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+    
+    if (extension == "exr")
+    {
+        return loadEXRTexture(path);
+    }
+    else if (extension == "hdr" || extension == "hdri")
+    {
+        return loadSTBIHDRTexture(path);
+    }
+    else
+    {
+        std::cerr << "Unsupported HDR format: " << extension << std::endl;
+        return 0;
+    }
 }
 
 GLuint Skybox::loadEXRTexture(const char* path)
@@ -40,6 +63,46 @@ GLuint Skybox::loadEXRTexture(const char* path)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     free(out);
+    return tex;
+}
+
+GLuint Skybox::loadSTBIHDRTexture(const char* path)
+{
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, nrComponents;
+    float* data = stbi_loadf(path, &width, &height, &nrComponents, 0);
+    
+    if (!data)
+    {
+        std::cerr << "Failed to load HDR image: " << path << std::endl;
+        return 0;
+    }
+
+    std::cout << "Loaded HDR: " << width << "x" << height << " (" << nrComponents << " components)" << std::endl;
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    
+    // Determine format based on number of components
+    GLenum format = GL_RGB;
+    if (nrComponents == 1)
+        format = GL_RED;
+    else if (nrComponents == 2)
+        format = GL_RG;
+    else if (nrComponents == 3)
+        format = GL_RGB;
+    else if (nrComponents == 4)
+        format = GL_RGBA;
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, format, GL_FLOAT, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
     return tex;
 }
 

@@ -34,8 +34,8 @@
 GLFWwindow* window = nullptr;
 const char* title = "Graphic engine";
 
-int WIDTH = 1280;
-int HEIGHT = 720;
+int WIDTH = 1920;
+int HEIGHT = 1080;
 
 std::string basePath = std::filesystem::current_path().string();
 const std::string texturesPath = basePath + "/assets/textures/";
@@ -91,10 +91,11 @@ int main()
     };
     
     lightConfig lightSettings;
+    lightSettings.lightType = 1;
 
     Shader floorShader((shadersPath + "default.vert").c_str(), (shadersPath + "default.frag").c_str());
     Shader skyboxShader((shadersPath + "skybox.vert").c_str(), (shadersPath + "skybox.frag").c_str());
-    Shader sphereShader((shadersPath + "default.vert").c_str(), (shadersPath + "default.frag").c_str());
+    Shader characterShader((shadersPath + "default.vert").c_str(), (shadersPath + "default.frag").c_str());
 
     GeometryCollection::Plane floor(15);
     glm::mat4 floorModel = glm::mat4(1.0f);
@@ -107,16 +108,16 @@ int main()
     glUniform3f(glGetUniformLocation(floorShader.ID, "lightPos"), lightSettings.position.x, lightSettings.position.y, lightSettings.position.z);
     glUniform1i(glGetUniformLocation(floorShader.ID, "lightType"), lightSettings.lightType);
     
-    GeometryCollection::Sphere sphere(0.8f);
-    glm::mat4 sphereModel = glm::mat4(1.0f);
-    glm::vec3 spherePosition = glm::vec3(0, 0, 0);
-    sphere.textures = std::vector <Texture>(textures, textures + sizeof(textures) / sizeof(Texture));
-    
-    sphereShader.Activate();
-    glUniformMatrix4fv(glGetUniformLocation(sphereShader.ID, "model"), 0, GL_FALSE, glm::value_ptr(sphereModel));
-    glUniform4f(glGetUniformLocation(sphereShader.ID, "lightColor"), lightSettings.lightColor[0], lightSettings.lightColor[1], lightSettings.lightColor[2], lightSettings.lightColor[3]);
-    glUniform3f(glGetUniformLocation(sphereShader.ID, "lightPos"), -lightSettings.position.x, -lightSettings.position.y, -lightSettings.position.z);
-    glUniform1i(glGetUniformLocation(sphereShader.ID, "lightType"), lightSettings.lightType);
+    Model character("C:/Users/youel/Desktop/Projects/C++/FormaGL/assets/models/3D-Character/scene.gltf");
+    glm::mat4 characterModel = glm::mat4(1.0f);
+    glm::vec3 characterPosition = glm::vec3(0.0f, 2949.0f, 5.0f);
+    glm::vec3 characterScale = glm::vec3(2.0f, 2.0f, 2.0f);
+
+    characterShader.Activate();
+    glUniformMatrix4fv(glGetUniformLocation(characterShader.ID, "model"), 0, GL_FALSE, glm::value_ptr(characterModel));
+    glUniform4f(glGetUniformLocation(characterShader.ID, "lightColor"), lightSettings.lightColor[0], lightSettings.lightColor[1], lightSettings.lightColor[2], lightSettings.lightColor[3]);
+    glUniform3f(glGetUniformLocation(characterShader.ID, "lightPos"), -lightSettings.position.x, -lightSettings.position.y, -lightSettings.position.z);
+    glUniform1i(glGetUniformLocation(characterShader.ID, "lightType"), lightSettings.lightType);
     
     Skybox skybox((texturesPath + "citrus_orchard_puresky_4k.exr").c_str());
     skyboxShader.Activate();
@@ -134,7 +135,6 @@ int main()
     
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    
     bool showUI = false;
     while (!glfwWindowShouldClose(window))
     {
@@ -156,23 +156,31 @@ int main()
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
             ImGui::SetNextWindowPos(ImVec2(0, 0));
             ImGui::SetNextWindowSize(ImVec2(350, (float)HEIGHT));
-            ImGui::Begin("Scene Hierarchy", nullptr, window_flags);    
-            ImGui::DragFloat3("Light Position", &lightSettings.position.x);
-            const char* lightTypes[] = { "Point", "Directional", "Spot" };
-            ImGui::Combo("Light Type", &lightSettings.lightType, lightTypes, IM_ARRAYSIZE(lightTypes));
+            ImGui::Begin("Scene Hierarchy", nullptr, window_flags);
+            if (ImGui::CollapsingHeader("Light"))
+            {  
+                ImGui::DragFloat3("Light Position", &lightSettings.position.x);
+                const char* lightTypes[] = { "Point", "Directional", "Spot" };
+                ImGui::Combo("Light Type", &lightSettings.lightType, lightTypes, IM_ARRAYSIZE(lightTypes));
+            }
+            if (ImGui::CollapsingHeader("Character"))
+            {  
+                ImGui::DragFloat3("Position", &characterPosition.x);
+                ImGui::DragFloat3("Scale", &characterScale.x);
+            }
             ImGui::End();
         }
-        
+                
         floorShader.Activate();
         glUniform3f(glGetUniformLocation(floorShader.ID, "lightPos"), lightSettings.position.x, lightSettings.position.y, lightSettings.position.z);
         glUniform1i(glGetUniformLocation(floorShader.ID, "lightType"), lightSettings.lightType);
 
-        sphereShader.Activate();
-        glUniform3f(glGetUniformLocation(sphereShader.ID, "lightPos"), -lightSettings.position.x, -lightSettings.position.y, -lightSettings.position.z);
-        glUniform1i(glGetUniformLocation(sphereShader.ID, "lightType"), lightSettings.lightType);
+        characterShader.Activate();
+        glUniform3f(glGetUniformLocation(characterShader.ID, "lightPos"), -lightSettings.position.x, -lightSettings.position.y, -lightSettings.position.z);
+        glUniform1i(glGetUniformLocation(characterShader.ID, "lightType"), lightSettings.lightType);
 
         floor.Draw(floorShader, camera, floorModel, floorPosition);
-        sphere.Draw(sphereShader, camera, sphereModel, spherePosition);
+        character.Draw(characterShader, camera, characterPosition, glm::quat(1.0f, 0.0f, 0.0f, 0.0f), characterScale);
         skybox.Draw(skyboxShader, camera);
 
         ImGui::Render();

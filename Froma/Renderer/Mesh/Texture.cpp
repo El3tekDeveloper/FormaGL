@@ -4,7 +4,7 @@ Texture::Texture(const char* image, const char* textureType, GLuint slot)
 {
     type = textureType;
     int widthImg, heightImg, numColCh;
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     unsigned char* bytes = stbi_load(image, &widthImg, &heightImg, &numColCh, 0);
 
     glGenTextures(1, &ID);
@@ -12,8 +12,8 @@ Texture::Texture(const char* image, const char* textureType, GLuint slot)
     unit = slot;
     glBindTexture(GL_TEXTURE_2D, ID);
     
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
